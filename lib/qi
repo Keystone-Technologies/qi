@@ -1,0 +1,103 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+#use warnings;
+#use diagnostics;
+
+use Data::Dumper;
+use IO::Prompt;
+use Config::General;
+use Getopt::Long;
+use Date::Manip;
+
+use Net::Google::Spreadsheets;
+use Net::Google::AuthSub;
+
+my $help = 0;
+my %set = ();
+GetOptions(
+	'help|h' => \$help,
+	'set|s=s' => \%set,
+);
+die "Usage: $0 --set customer=Customer ... [options] [SS] [WS]\n" if $help;
+
+my $qifile;
+do { $qifile=$_ if -e $_; } foreach '/etc/qi.conf', "$ENV{HOME}/.qi", '.qi';
+my $qiconf = new Config::General($qifile);
+my %qiconf = $qiconf->getall;
+my %qi = map { s/\W//g; lc($_) => '' } split m!;!, $qiconf{header};
+my $qi = {};
+
+my $auth = Net::Google::AuthSub->new();
+my $response = $auth->login($qiconf{user}, $qiconf{pass});
+die "Authentication Failure: " . $response->error unless $response->is_success;
+
+my $service = Net::Google::Spreadsheets->new(
+	username => $qiconf{user},
+	password => $qiconf{pass},
+);
+
+print "Opening SS ", $ARGV[0] || $qiconf{ss}, "\n";
+my $sheet = $service->spreadsheet({title => $ARGV[0] || $qiconf{ss}}) or die "$!\n";
+print "Opening SS ", $ARGV[1] || $qiconf{ws} || 'Sheet1', "\n";
+my $ws = $sheet->worksheet({title => $ARGV[1] || $qiconf{ws} || 'Sheet1'}) or die "$!\n";
+
+my ($THIS, $NEXT);
+while ( 1 ) {
+	prompt "qi".($qi->{$THIS}->{cogstonetag}?" $qi->{$THIS}->{cogstonetag}":'').($qi->{$THIS}->{_input}?" $qi->{$THIS}->{_input}":'').($qi->{$THIS}->{$qi->{$THIS}->{_input}}?" $qi->{$THIS}->{$qi->{$THIS}->{_input}}":'')."> ";
+	last if /^(0|quit|exit)$/;
+
+	if ( /^(\d{6}[AB])$/ ) {
+		$NEXT = $_;
+		%{$qi->{$NEXT}} = %qi unless exists $qi->{$NEXT} && $NEXT ne $THIS;
+		do { $qi->{$NEXT}->{$_} ||= $set{$_} eq 'now' ? UnixDate(ParseDate('now'), '%m/%d/%Y') : $set{$_}; } foreach keys %set;
+		if ( my $row = $ws->row({sq => "cogstonetag = \"$NEXT\""}) ) {
+			my $content = $row->content;
+			$qi->{$NEXT}->{$_} = $content->{$_} foreach grep { $content->{$_} } keys %{$content};
+		} else {
+			$qi->{$NEXT}->{cogstonetag} = $NEXT;
+		}
+
+		if ( $qi->{$THIS}->{cogstonetag} ) {
+			if ( $qi->{$THIS}->{assettag} ) {
+				if ( $qi->{$THIS}->{_update} ) {
+					print "Updating SS\n";
+					if ( my $row = $ws->row({sq => "cogstonetag = \"$qi->{$THIS}->{cogstonetag}\""}) ) {
+						$row->content({map { lc($_) => $qi->{$THIS}->{$_} } grep { /^[A-Za-z]/ && $qi->{$THIS}->{$_} } keys %{$qi->{$THIS}}});
+					} else {
+						$ws->add_row({map { lc($_) => $qi->{$THIS}->{$_} } grep { /^[A-Za-z]/ } keys %{$qi->{$THIS}}});
+					}
+					$qi->{$THIS}->{_update} = 0;
+				}
+				$THIS = $NEXT;
+			} elsif ( $qi->{$THIS}->{_input} ) {	# && any of /^[a-z]/ ne ''
+				print STDERR "Minimum client asset tag field missing.\n";
+			} else {
+				$THIS = $NEXT;
+			}
+		} else {
+			$THIS = $NEXT;
+		}
+	} elsif ( /^QIV_([\*\w]+)$/ ) {
+		print STDERR "$_ = $qi->{$THIS}->{$_}\n" foreach grep { $1 eq '*' || $1 eq $_ } sort keys %{$qi->{$THIS}};
+	} elsif ( /^QI_(\w+):(\w+)$/ && $qi->{$THIS}->{cogstonetag} ) {
+		if ( grep { $_ eq lc($1) } keys %qi ) {
+			$qi->{$THIS}->{_input} = lc($1);
+			$qi->{$THIS}->{$1} = $2;
+		} else {
+			print STDERR "Unrecognized field $1\n";
+		}
+	} elsif ( /^QI_(\w+)$/ && $qi->{$THIS}->{cogstonetag} ) {
+		if ( grep { $_ eq lc($1) } keys %qi ) {
+			$qi->{$THIS}->{_input} = lc($1);
+		} else {
+			print STDERR "Unrecognized field $1\n";
+		}
+	} elsif ( $qi->{$THIS}->{cogstonetag} && $qi->{$THIS}->{_input} ) {
+		$qi->{$THIS}->{_update} = 1;
+		$qi->{$THIS}->{$qi->{$THIS}->{_input}} = $_;
+	} else {
+		print STDERR "Unrecognized input $_.\n";
+	}
+}

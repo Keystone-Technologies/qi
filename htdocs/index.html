@@ -1,0 +1,359 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1" />
+<title>Quick Inventory</title>
+<link rel="stylesheet" type="text/css" href="css/jquery-ui.css" />
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="js/jquery-jtemplates.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    function show_record(data) {
+console.log(data);
+	if ( data.error ) {
+            $("#qi input").val('');
+	    $('#error').html(data.error);
+	    return false;
+	}
+        $("#record").processTemplate(data);
+	if ( data.who=="" ) {
+                $("#dialog-who").dialog({
+                    autoOpen: false,
+                    height: 320,
+                    width: 380,
+                    modal: true
+                });
+                $("input#who").focus();
+                $(window).click(function(){
+                    $("input#who").focus();
+                });
+                $("input#who").keydown(function(e){
+                    if(e.keyCode == 9 || e.keyCode == 13){
+                        e.preventDefault();
+			console.log($("#who").serialize());
+                        $.post('pl/assets', $("#who").serialize(), function(data){console.log($("#who").serialize());show_record(data);}, 'json');
+                        $("#dialog-who").dialog("close");
+                        $("#who").val('');
+                    }
+                });
+                $("#dialog-who").dialog("open");
+	} else {
+            $("#input").focus();
+            $(window).click(function(){
+                $("#input").focus();
+            });
+            if ( data.record.tag == null ) {
+                $("#instructions").html("Scan a Cogstone Tag to start, or special barcode 000000Z to generate a stickerless tag (because EVERY record needs a tag).");
+                $("#tag").html('Tag: &lt;scan&gt;');
+                $("#field").html('');
+            } else {
+                $("#instructions").html('');
+                $("#iam").html("I am " + (data.who==null?'':data.who));
+                $("#tag").html("Tag: " + (data.record.tag==null?'':data.record.tag));
+                if ( data.field == null ) {
+                    $("#field").html('Field: &lt;scan&gt;');
+                } else {
+                    $("#field").html("Field: " + (data.field==null?'':data.field));
+                }
+                $.each(['parenttag', 'received', 'customer_id', 'customer_tag', 'serial_number', 'manufacturer', 'product', 'model', 'location_id', 'status_id', 'asset_type_id', 'cond_id', 'sold_via_id', 'buyer_id', 'sold_to', 'po_number', 'hipaa', 'hipaa_person', 'sold', 'billed', 'paid', 'shipped', 'price', 'related_expenses', 'revenue_percentage', 'comments', 'qty'], function(i, k){
+                    $('#QIF_'+k).click(function(){
+        /*              $.post('pl/input', {input: 'QIF_'+k}, function(data1){
+                            //$("#field").html("Field: " + (data1.field==null?'':data1.field));
+                            $('#record_table td').removeClass('field');
+                            $('#QIF_'+data1.field).addClass('field');
+                        }, 'json');*/
+                        $.post('pl/assets', {input: 'QIF_'+k}, function(data1){show_record(data1);}, 'json');
+                    });
+                });
+                $('#record_table td').removeClass('field');
+                $('#QIF_'+data.field).addClass('field');
+            }
+            $("#recent").processTemplate(data).find('td[name="recent"]').each(function(){
+                $(this).click(function(){
+                    $.post('pl/assets', {input: $(this).attr('value')}, function(data1){show_record(data1);}, 'json');
+                });
+            });
+            $("#qi input").val('');
+            if(data.prompt){
+                $("#dialog-prompt").dialog({
+                    autoOpen: false,
+                    height: 320,
+                    width: 380, 
+                    modal: true 
+                });
+                $("input#prompt").focus();
+                $(window).click(function(){
+                    $("input#prompt").focus();
+                });
+
+                // This is where the sold price modal becomes a problem; it repeats itself exponentially
+                $("input#prompt").keydown(function(e){
+                    if(e.keyCode == 9 || e.keyCode == 13){
+                        e.preventDefault();
+                        console.log($("#prompt").serialize());
+                        $.post('pl/assets', {input: $("#prompt").val()}, function(data){
+                            console.log("1: "+$("#prompt").val());
+                            //show_record(data);
+                        }, 'json');
+                        $("#prompt").val('');
+                        $("#dialog-prompt").dialog("close");
+                    }
+                });  
+                $("#dialog-prompt").dialog("open");
+                $('label[for="prompt"]').html(data.prompt);
+            }
+	}
+    }
+
+    $("#record").setTemplateElement("t_record");
+    $("#recent").setTemplateElement("t_recent");
+
+    $("#qi input").keyup(function(e){
+        $('#keyboard').html($('#qi input').val());
+    });
+    $("#qi input").keydown(function(e){
+        if(e.keyCode == 9 || e.keyCode == 13){
+            e.preventDefault();
+            $.post('pl/assets', $("#qi").serialize(), function(data){console.log("2: "+show_record(data));}, 'json');
+            $("#qi input").val('');
+        }
+    });
+
+    $(window).click(function(){
+        $("#input").focus();
+    });
+    $("#input").focus(function(){
+        $("#focus").html('Accepting input').addClass('on').removeClass('off');
+    }).blur(function(){
+        $("#focus").html('NOT accepting input').addClass('off').removeClass('on');
+    });
+
+    $('.link').click(function(){
+        $.post('pl/assets', {input: this.id}, function(data){console.log("3: "+show_record(data));}, 'json');
+        $("#dialog-prompt").dialog("close");
+    });
+    $('.linkprompt').click(function(){
+        $("#dialog-prompt").dialog({
+                    autoOpen: false,
+                    height: 320,
+                    width: 380,
+                    modal: true
+        });
+        $("input#prompt").focus();
+        $(window).click(function(){
+                    $("input#prompt").focus();
+        });
+
+	var linkprompt=this;
+       	$("input#prompt").keydown(function(e){
+            if(e.keyCode == 9 || e.keyCode == 13){
+                e.preventDefault();
+                console.log($("#prompt").serialize());
+		if(linkprompt.id){
+	       	    $.post('pl/assets', {input: linkprompt.id, prompt: $("#prompt").val()}, function(data){
+        	        console.log("4: "+$("#prompt").val());
+                        show_record(data);
+                    }, 'json');
+		}else{
+		    window.open('http://qi.cogstonestl.com/pl/barcodes/'+$("#prompt").val(),'_blank');
+		}
+       	        $("#prompt").val('');
+               	$("#dialog-prompt").dialog("close");
+            }
+        });
+        $("#dialog-prompt").dialog("open");
+        $('label[for="prompt"]').html(this.id);
+    });
+
+/*
+    $('#QIM_reset').click(function(){
+        $.post('pl/assets', {input: 'QIM_reset'}, function(data){show_record(data);}, 'json');
+    });
+    $('#QIM_cancel').click(function(){
+        $.post('pl/assets', {input: 'QIM_cancel'}, function(data){show_record(data);}, 'json');
+    });
+    $('#QIM_delete').click(function(){
+        $.post('pl/assets', {input: 'QIM_delete'}, function(data){show_record(data);}, 'json');
+    });
+    $('#QIM_search').click(function(){
+        $.post('pl/assets', {input: 'QIM_search'}, function(data){show_record(data);}, 'json');
+    });
+*/
+    $.post('pl/assets', function(data){console.log("5: "+show_record(data));}, 'json');
+
+    $("span.linkdrop").click(function(){
+        $("#shortcuts").toggle();
+    });
+});
+</script>
+<style>
+	#qi input {border:0px;color:#FFFFFF;font-size:1pt;width:0px;}
+	#focus.on {color:green;}
+	#focus.off {color:red;}
+	#tag {color:blue;}
+	#field {color:blue;}
+	.null {color:lightgray;}
+	.field {color:green;}
+	.pointer {cursor:pointer;}
+	.current {color:green;}
+	.red {background-color:red;}
+	#instructions {color:red;}
+	#record_table {border-top:1px solid black;}
+	#recent_table {border-left:1px solid black;border-collapse:collapse;}
+	#recent_table td {border-bottom:1px solid lightgray;border-right:1px solid lightgray;vertical-align:top;padding-left:2px;padding-right:2px;}
+	.linkdrop {text-decoration:underline;cursor:pointer;}
+	.linkprompt {text-decoration:underline;cursor:pointer;}
+	#shortcuts {display:none;padding-left:20px;}
+	div.modal {display:none;}
+</style>
+</head>
+<body onLoad="qi.input.focus()">
+	<a href="qi.html">Click here to download the spreadsheet</a><br />
+	<span class=linkdrop>Click here to download the latest barcode shortcuts</span><br />
+	<div id="shortcuts">
+		<a href="http://qi.cogstonestl.com/pl/barcodes/Customer">Customer</a><br />
+		<a href="http://qi.cogstonestl.com/pl/barcodes/Asset">Asset Type</a><br />
+		<a href="http://qi.cogstonestl.com/pl/barcodes/Location">Location</a><br />
+		<span class=linkprompt>Search...</span>
+	</div>
+	<hr />
+	<table>
+	<tr>
+	<td style="width: 300px">
+	        <div id=iam></div>
+	        <div id=focus></div>
+	        Input: <span id=keyboard></span><br />
+                                <form id="qi" name="qi" autocomplete="off">
+                                <input id="input" type="text" name="input" autocomplete="off" />
+                                </form>
+		<span id=000000Y class=link>Reset</span> | <span id=000004Y class=link>Cancel</span> | <span id=000019Y class=link>Delete</span><!-- | <span id=QIM_search class=link>Search</span> -->
+		<br />
+		<span id=001378Y class=link>Sell Now</span> | <span id=001063Y class=link>Dispose</span>
+		<br />
+		<span id=001372Y class=linkprompt>New Asset Type</span> | <span id=001373Y class=linkprompt>New Customer</span>
+	</td>
+	<td>
+		Color Macros:<br />
+		<div style="width: 15px; height: 15px; display: inline; background: red;">&nbsp;</div>
+		<div style="width: 15px; height: 15px; display: inline; background: green;">&nbsp;</div>
+		<div style="width: 13px; height: 13px; display: inline; background: white; border: 1px solid black">&nbsp;</div>
+		<div style="width: 15px; height: 15px; display: inline; background: blue;">&nbsp;</div>
+		<div style="width: 15px; height: 15px; display: inline; background: purple;">&nbsp;</div>
+		<div style="width: 15px; height: 15px; display: inline; background: black;">&nbsp;</div>
+	</td>
+	</tr>
+	</table>
+	<hr />
+	<table>
+		<tr>
+			<td valign="top" width="33%">
+                                <div id="instructions"></div>
+                                <div id="tag"></div>
+                                <div id="field"></div>
+                                <div id="record"></div>
+			</td>
+			<td valign="top">
+				<div id="recent"></div>
+			</td>
+		</tr>
+	</table>
+
+        <div id="dialog-who" title="Who are you?" class="modal">
+                <form method='post'>
+                <table>
+                <tr><td colspan="2">Scan your ID badge.</td></tr>
+                <tr><td><input id="who" type='text' name='input' maxlength='60'></td></tr>
+                </table>
+                </form>
+        </div>
+
+        <div id="dialog-prompt" title="Value" class="modal">
+                <form method='post'>
+                <table>
+                <tr><td colspan="2"><label for="prompt">Value:</label></td><td><input id="prompt" type='text' name='prompt' maxlength='60'></td></tr>
+                <tr><td colspan="2" style="text-align:center"><span id=QIV_skip class=link>Skip</span></td></tr>
+                </table>
+                </form>
+        </div>
+
+        <textarea id="t_record" style="display:none">
+	{#if $T.record.tag}
+	<table id="record_table">
+		<tr><td id="QIF_tag">Tag</td><td>{$T.record.tag}</td></tr>
+		<tr><td>Asset</td><td>{$T.record.asset}</td></tr>
+		{#if $T.record.asset == 'tangible'}
+                        <tr><td class="pointer" id="QIF_parenttag">Parent Tag</td><td class="{$T.record.parenttag?'':'null'}">{$T.record.parenttag}</td></tr>
+                        <tr><td class="pointer" id="QIF_received">Received</td><td class="{$T.record.received?'':'null'}">{$T.record.received}</td></tr>
+                        <tr><td class="pointer" id="QIF_customer_id"><i>Customer</i></td><td class="{$T.record.customer.name?'':'null'}">{$T.record.customer.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_customer_tag">Customer Tag</td><td class="{$T.record.customer_tag?'':'null'}">{$T.record.customer_tag}</td></tr>
+                        <tr><td class="pointer" id="QIF_serial_number">Serial Number</td><td class="{$T.record.serial_number?'':'null'}">{$T.record.serial_number}</td></tr>
+                        <tr><td class="pointer" id="QIF_manufacturer">Manufacturer</td><td class="{$T.record.manufacturer?'':'null'}">{$T.record.manufacturer}</td></tr>
+                        <tr><td class="pointer" id="QIF_product">Product</td><td class="{$T.record.product?'':'null'}">{$T.record.product}</td></tr>
+                        <tr><td class="pointer" id="QIF_model">Model</td><td class="{$T.record.model?'':'null'}">{$T.record.model}</td></tr>
+                        <tr><td class="pointer" id="QIF_location_id"><i>Location</i></td><td class="{$T.record.location.name?'':'null'}">{$T.record.location.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_asset_type_id"><i>Asset Type</i></td><td class="{$T.record.asset_type.name?'':'null'}">{$T.record.asset_type.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_status_id"><i>Status</i></td><td class="{$T.record.status.name?'':'null'}">{$T.record.status.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_cond_id"><i>Condition</i></td><td class="{$T.record.cond.name?'':'null'}">{$T.record.cond.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_hipaa">HIPAA'd</td><td class="{$T.record.hipaa?'':'null'}">{$T.record.hipaa}</td></tr>
+                        {#if $T.record.hipaa!=null}
+                        <tr><td class="pointer" id="QIF_person">Responsible Person</td><td class="{$T.record.person?'':'null'}">{$T.record.person}</td></tr>
+                        {#/if}
+                        <tr><td class="pointer" id="QIF_comments" style="border-bottom:1px">Comments</td><td style="border-bottom:1px" class="{$T.record.comments?'':'null'}">{$T.record.comments}</td></tr>
+                        <tr><td class="pointer" id="QIF_price">Price</td><td class="{$T.record.price?'':'null'}">{$T.record.price}</td></tr>
+                        <tr><td class="pointer" id="QIF_sold">Sold</td><td class="{$T.record.sold?'':'null'}">{$T.record.sold}</td></tr>
+			{#if $T.record.sold!=null}
+                        <tr><td class="pointer" id="QIF_sold_via_id"><i>Sold Via</i></td><td class="{$T.record.sold_via.name?'':'null'}">{$T.record.sold_via.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_buyer_id"><i>Buyer</i></td><td class="{$T.record.buyer.name?'':'null'}">{$T.record.buyer.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_sold_to"><i>Sold To (Tech)</i></td><td class="{$T.record.sold_to?'':'null'}">{$T.record.sold_to}</td></tr>
+                        <tr><td class="pointer" id="QIF_po_number"><i>PO / Ticket #</i></td><td class="{$T.record.po_number?'':'null'}">{$T.record.po_number}</td></tr>
+                        <tr><td class="pointer" id="QIF_billed">Billed</td><td class="{$T.record.billed?'':'null'}">{$T.record.billed}</td></tr>
+                        <tr><td class="pointer" id="QIF_paid">Paid</td><td class="{$T.record.paid?'':'null'}">{$T.record.paid}</td></tr>
+                        <tr><td class="pointer" id="QIF_shipped">Shipped</td><td class="{$T.record.shipped?'':'null'}">{$T.record.shipped}</td></tr>
+                        <tr><td class="pointer" id="QIF_related_expenses">Related Expenses</td><td class="{$T.record.related_expenses?'':'null'}">{$T.record.related_expenses}</td></tr>
+                        <tr><td class="pointer" id="QIF_revenue_percentage">Cogstone Percentage</td><td class="{$T.record.revenue_percentage?'':'null'}">{$T.record.revenue_percentage}</td></tr>
+                        {#/if}
+		{#elseif $T.record.asset == 'quantifiable'}
+                        <tr><td class="pointer" id="QIF_product">Product</td><td class="{$T.record.product?'':'null'}">{$T.record.product}</td></tr>
+                        <tr><td class="pointer" id="QIF_location_id"><i>Location</i></td><td class="{$T.record.location.name?'':'null'}">{$T.record.location.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_asset_type_id"><i>Asset Type</i></td><td class="{$T.record.asset_type.name?'':'null'}">{$T.record.asset_type.name}</td></tr>
+                        <tr><td class="pointer" id="QIF_comments">Comments</td><td class="{$T.record.comments?'':'null'}">{$T.record.comments}</td></tr>
+                        <tr><td class="pointer" id="QIF_price">Price</td><td class="{$T.record.price?'':'null'}">{$T.record.price}</td></tr>
+                        <tr><td class="pointer" id="QIF_qty">Quantity</td><td class="{$T.record.qty?'':'null'}">{$T.record.qty}</td></tr>
+		{#/if}
+	</table>
+	{#if $T.record.status.name}
+	<div style="width: 15px; height: 15px; background: {$T.record.status.name};">&nbsp;</div>
+	{#/if}
+	{#/if}
+	</textarea>
+
+        <textarea id="t_recent" style="display:none">
+	<table id="recent_table">
+		<tr><th>Tag (Qty)<br/ >ParentTag</th><th>Customer<br />Received</th><th>Customer Tag<br />Serial Number</th><th>Asset Type</th><th>Manufacturer - Product<br />Model</th><th>Location</th>
+		{#foreach $T.recent as recent}
+		<tr>
+		<td class="pointer {$T.recent.tag==$T.record.tag?'current':''}" name="recent" value="{$T.recent.tag}">
+			{$T.recent.tag}{#if $T.recent.asset == 'quantifiable'} ({$T.recent.qty}){#/if}
+			{#if $T.recent.parenttag}<br />{$T.recent.parenttag}{#/if}
+		</td>
+		<td>
+			{$T.recent.customer.name||""}<br />
+			{$T.recent.received||""}
+		</td>
+		<td>
+			{$T.recent.customer_tag||"-"}<br />
+			{$T.recent.serial_number||"-"}
+		</td>
+		<td>{$T.recent.asset_type.name}</td>
+		<td>
+			{$T.recent.manufacturer||""} - {$T.recent.product||""}<br />
+			{$T.recent.model||""}
+		</td>
+		<td>{$T.recent.location.name}</td>
+		</tr>
+		{#/for}
+	</table>
+        </textarea>
+</body>
+</html>
