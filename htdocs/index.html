@@ -91,11 +91,13 @@ console.log(data);
                 $("input#prompt").keydown(function(e){
                     if(e.keyCode == 9 || e.keyCode == 13){
                         e.preventDefault();
-                        console.log($("#prompt").serialize());
+                        console.log("1a: " + $("#prompt").serialize());
+if ( $("#prompt").val() ) {
                         $.post('pl/assets', {input: $("#prompt").val()}, function(data){
-                            console.log("1: "+$("#prompt").val());
-                            //show_record(data);
+                            console.log("1b: "+$("#prompt").val());
+                            show_record(data);
                         }, 'json');
+}
                         $("#prompt").val('');
                         $("#dialog-prompt").dialog("close");
                     }

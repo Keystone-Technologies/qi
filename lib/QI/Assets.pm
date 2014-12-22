@@ -42,7 +42,8 @@ $self->warn_session('Start');
 				asset_type => {
 					hipaa => [qw/Server Laptop Desktop/],
 				},
-				sold => [qw/price related_expenses/],
+				#sold => [qw/price related_expenses/],
+				sold => [qw/price/],
 			},
 		},
 		QUANTIFIABLE => {
@@ -52,7 +53,7 @@ $self->warn_session('Start');
 	$PROMPT = {
 		TANGIBLE => {
 			price => {skip => 0, label => 'Price:'},
-			related_expenses => {skip => 0, label => 'Related Expenses:'},
+			#related_expenses => {skip => 0, label => 'Related Expenses:'},
 		},
 		QUANTIFIABLE => {
 			price => {skip => 0, label => 'Price:'},
