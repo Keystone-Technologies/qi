@@ -37,7 +37,7 @@ sub amdocs_GET : Runmode {
 	open my $fh, '>', \my $str or die "Failed to open filehandle: $!";
 	my $workbook = Spreadsheet::WriteExcel->new($fh);
 	my $worksheet = $workbook->add_worksheet();
-	my $assets = $self->schema->resultset("Assets")->search({customer_id=>'1'}, {order_by=>{-asc=>'received'}});;
+	my $assets = $self->schema->resultset("Assets")->search({customer_id=>'1',received=>{'>='=>'2015-04-07'}}, {order_by=>{-asc=>'received'}});;
 	my $row=0;
 	$worksheet->write($row++, 0, [map { $_ } qw/tag parenttag customer received customer_tag serial_number asset_type manufacturer product model cond sold price change_stamp/]);
 	while ( my $asset = $assets->next ) {

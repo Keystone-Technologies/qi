@@ -4,7 +4,7 @@ use Class::Method::Modifiers;
 
 __PACKAGE__->load_components(qw/InflateColumn::DateTime Helper::Row::ToJSON/);
 __PACKAGE__->table('assets');
-__PACKAGE__->add_columns(qw/tag parenttag customer_tag customer_id received serial_number asset_type_id manufacturer product model cond_id location_id qty status_id hipaa hipaa_person sold_via_id buyer_id sold_to po_number sold billed paid customer_paid shipped price related_expenses revenue_percentage comments change_stamp add_stamp/);
+__PACKAGE__->add_columns(qw/tag parenttag customer_tag customer_id received serial_number asset_type_id manufacturer product model cond_id location_id qty status_id hipaa hipaa_person sold_via_id buyer_id sold_to po_number listed sold billed paid customer_paid shipped price related_expenses revenue_percentage comments change_stamp add_stamp/);
 __PACKAGE__->set_primary_key('tag');
 __PACKAGE__->belongs_to(customer => 'QI::Schema::Result::Customers', 'customer_id', {join_type=>'left'});
 __PACKAGE__->belongs_to(asset_type => 'QI::Schema::Result::AssetTypes', 'asset_type_id', {join_type=>'left'});
