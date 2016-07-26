@@ -50,4 +50,26 @@ sub amdocs_GET : Runmode {
 	return $str;
 }
 
+sub bissingers_GET : Runmode {
+	my $self = shift;
+	$self->header_add(
+		-type => 'application/vnd.ms-excel',
+		-attachment => 'bissingers.xls',
+	);
+	open my $fh, '>', \my $str or die "Failed to open filehandle: $!";
+	my $workbook = Spreadsheet::WriteExcel->new($fh);
+	my $worksheet = $workbook->add_worksheet();
+	my $assets = $self->schema->resultset("Assets")->search({customer_id=>'65',received=>{'>='=>'2016-06-01'}}, {order_by=>{-asc=>'received'}});;
+	my $row=0;
+	$worksheet->write($row++, 0, [map { $_ } qw/tag parenttag customer received customer_tag serial_number asset_type manufacturer product model cond sold price change_stamp/]);
+	while ( my $asset = $assets->next ) {
+		my %asset = $asset->get_columns;
+		$worksheet->write($row, 0, [qw/tag parenttag customer received customer_tag serial_number asset_type manufacturer product model cond sold price change_stamp/]) unless $row;
+		$worksheet->write($row++, 0, [map { $asset->$_ } qw/tag parenttag customer received customer_tag serial_number asset_type manufacturer product model cond sold price change_stamp/]);
+	}
+	$workbook->close;
+	close $fh;
+	return $str;
+}
+
 1;

@@ -6,7 +6,7 @@ Require valid-user
 Satisfy Any
 
 AuthUserFile /data/web/cgi-app/qi/htdocs/custom_xls/.htpasswd
-AuthName "Amdocs Login"
+AuthName "Login"
 AuthType Basic
 
 Options +Includes

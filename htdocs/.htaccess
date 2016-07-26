@@ -1,4 +1,5 @@
 redirect 301 /amdocs http://qi.cogstonestl.com/custom_xls/amdocs.html
+redirect 301 /bissingers http://qi.cogstonestl.com/custom_xls/bissingers.html
 
 #SetEnvIF X-FORWARDED-FOR "172.16.254.0/24" AllowIP
 #Order Deny,Allow
