@@ -1,2 +1,4 @@
 .qirc
 sql/
+qi.conf
+qi.mysql
