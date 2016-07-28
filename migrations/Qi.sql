@@ -110,7 +110,9 @@ CREATE TABLE if not exists users (
   email varchar(255) DEFAULT NULL
 );
 
-CREATE VIEW if not exists asset_vw 
+DROP VIEW asset_vw;
+
+CREATE VIEW asset_vw
 AS select assets.tag 
 AS tag,assets.parenttag 
 AS parenttag,assets.received 
