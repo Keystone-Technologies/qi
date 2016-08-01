@@ -1,9 +1,81 @@
-% layout 'default';
-% title 'Welcome';
-<h2><%= $msg %></h2>
-This page was generated from the template "templates/example/welcome.html.ep"
-and the layout "templates/layouts/default.html.ep",
-<%= link_to 'click here' => url_for %> to reload the page or
-<%= link_to 'here' => '/index.html' %> to move forward to a static page. To
-learn more, you can also browse through the documentation
-<%= link_to 'here' => '/perldoc' %>.
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="javascript/scripts.js"></script>
+</head>
+<body>
+    <div class="header">
+        Welcome <span id="user">USERNAME</span>
+        <div class="buttonsContainer">
+            <button onclick="clearAssetInfo();">Clear Form</button>
+            <button onclick="hideAssetInfo();">Cancel</button>
+            <button>Delete</button>
+            <button>Sell Now</button>
+            <button>Dispose</button>
+            <button>New Asset Type</button>
+            <button>New Customer</button>
+        </div>
+    </div>
+    
+    <div class="backgroundCover">
+        
+    </div>
+    
+    <div class="signInContainer">
+        <div class="signInTitle">
+            Scan your ID badge
+        </div>
+        <input class="signInBadge" id="signInBadge">
+    </div>
+    
+    <div class="assetInfoContainer">
+        <div id="noAssetMessage">
+            no asset is currently selected
+        </div>
+        
+        <!-- the C in TITLE means when it is processed that title with have the first letter capitalized-->
+        
+        <table id="assetInfo" class="assetInfo">
+            
+            <!-- these tr will be extracted and stored in a variable in the js, then repopulated and reinsterted into the code at the right time -->
+            <tr id="nochange">
+                <td>CTITLE</td><td>VALUE</td>
+            </tr>
+            <tr id="text">
+                <td>CTITLE</td><td><input id="TITLE" type="text" value="VALUE"></td>
+            </tr>
+            <tr id="date">
+                <td>CTITLE</td><td><input id="TITLE" type="date" value="VALUE"></td>
+            </tr>
+            <tr id="number">
+                <td>CTITLE</td><td><input id="TITLE" type="number" value="VALUE"></td>
+            </tr>
+            <tr id="selection">
+                <td>CTITLE</td><td><input id="TITLE" type="text" value="VALUE">
+                <select id="select_TITLE">
+                  <option value="">--</option>
+                  <!-- these options will be changed eventually to allow the program to assign the most recently selected options to appear in order -->
+                  <option value="banana">Banana</option>
+                  <option value="orange">Orange</option>
+                  <option value="apple">Apple</option>
+                  <option value="tomato">Tomato</option>
+                </select></td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="assetTableContainer">
+        <table class="assetTable">
+            <thead>
+                <tr>
+                    <th>Tag (Qty)</br>Parent Tag</th><th>Customer</br>Received</th><th>Customer Tag</br>Serial Number</th><th>Asset Type</th><th>Manufacturer-Product</br>Model</th><th>Location</th>
+                </tr>
+            </thead>
+            <tbody id="assetTableBody">
+                <tr id=TAG><td>TAG</br>PARENT</td><td>CUSTOMER</br>RECEIVED</td><td>CUST_AG</br>SERIAL</td><td>ASSET_TYPE</td><td>MANUFACTURER-PRODUCT</br>MODEL</td><td>LOCATION</td></tr>
+            </tbody>
+            
+        </table>
+    </div>
+</body>
