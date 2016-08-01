@@ -22,7 +22,7 @@ sub startup {
   $r->get('/')->to('example#welcome');
 
   # Migrate to latest version if necessary
-  my $path = $self->home->rel_file('migrations/Qi.sql');
+  my $path = $self->home->rel_file('migrations/qi.sql');
   $self->pg->migrations->name('qi')->from_file($path)->migrate;
 }
 
