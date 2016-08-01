@@ -1,0 +1,97 @@
+body {
+    margin:0;
+    height:100%;
+}
+
+button {
+    cursor: pointer;
+}
+
+/***************** the header is here ****************/
+
+.header {
+    border-bottom: 1px solid black;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+}
+
+.buttonsContainer {
+    margin-top: 10px;
+}
+
+/****************** sign in badge and stuff is here ******************/
+
+.backgroundCover {
+    background-color: black;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    opacity: 0.4;
+}
+
+.signInContainer {
+    position: fixed;
+    background-color: white;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.signInTitle {
+    margin: 10px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.signInBadge {
+    margin: 10px;
+}
+
+/****************** ASSET TABLE ************/
+.assetTableContainer {
+    display: inline-block;
+    position: absolute;
+}
+
+.assetTable {
+    border-collapse: collapse;
+    border-left: 1px solid black;
+}
+
+.assetTable td {
+    padding-left: 20px;
+    padding-right: 20px;
+    border: 1px solid #b5b5b5;
+    border-top: none;
+    border-left: none;
+    cursor: pointer;
+}
+
+.assetTable tr:hover {
+    background-color: #f6f6f6;
+}
+
+/**************** ASSET INFO ******************/
+
+.assetInfoContainer {
+    display: inline-block;
+    background-color: white;
+    margin-right: 3px;
+    min-width: 360px;
+}
+
+.assetInfo td {
+    padding:5px;
+}
+
+.selected {
+    background-color: #f6f6f6;
+}
