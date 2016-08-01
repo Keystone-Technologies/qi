@@ -7,7 +7,26 @@ sub asset {
     
     my $tag = $self->param('tag');
     
+    #If the asset is in the database, return it as json. Otherwise, return a code signifying that a new asset needs to be created for that tag
+    
     my $data->{response} = "You requested tag " . $tag;
+    
+    $self->render(json => $data);
+}
+
+#probably should use a better name for this subroutine
+sub update {
+    my $self = shift;
+    
+    my $data;
+    
+    $data->{tag} = $self->param('tag');
+    $data->{customer} = $self->param('customer');
+    $data->{asset_type} = $self->param('asset_type');
+    
+    #create new asset or update an existing one
+    
+    $data->{response} = "updating the information in the table, or creating a new entry HAH";
     
     $self->render(json => $data);
 }
