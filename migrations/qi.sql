@@ -117,15 +117,21 @@ DROP VIEW asset_vw;
 
 CREATE VIEW asset_vw AS 
   select 
-  assets.tag AS tag,
-  assets.parenttag AS parenttag,
-  assets.received AS received,
-  asset_types.name AS asset_type,
-  assets.manufacturer AS manufacturer,
-  left(assets.product,10) AS product,
-  left(assets.model,10) AS model,
-  locations.name AS location from ((assets left join asset_types on((assets.asset_type_id = asset_types.asset_type_id))) left join locations on((assets.location_id = locations.location_id))
-);
+    assets.tag AS tag,
+    assets.parenttag AS parenttag,
+    assets.received AS received,
+    asset_types.name AS asset_type,
+    assets.manufacturer AS manufacturer,
+    left(assets.product,10) AS product,
+    left(assets.model,10) AS model,
+    locations.name AS location from (
+      (
+        assets left join asset_types 
+        on(assets.asset_type_id = asset_types.asset_type_id)
+      ) left join locations 
+      on(assets.location_id = locations.location_id)
+    )
+;
 
 -- 1 down
 
