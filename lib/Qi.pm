@@ -20,6 +20,10 @@ sub startup {
 
   # Normal route to controller
   $r->get('/')->to('example#welcome');
+  
+  my $api = $r->under('/api');
+  
+  $api->delete('/assets');
 
   # Migrate to latest version if necessary
   my $path = $self->home->rel_file('migrations/qi.sql');
