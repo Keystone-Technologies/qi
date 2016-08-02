@@ -26,6 +26,7 @@ sub startup {
   $r->get('/')->to('example#welcome');
   $r->get('/asset')->to('assets#asset'); #returns information for a single asset
   $r->get('/table')->to('assets#table');
+  $r->get('/specialinputs')->to('assets#specialinputs');
   
   $r->post('/asset')->to('assets#update'); #updates or creates an asset
 }

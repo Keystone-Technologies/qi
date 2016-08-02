@@ -39,4 +39,18 @@ sub table {
     $self->render(json => $data);
 }
 
+sub specialinputs {
+    my $self = shift;
+    
+    #this will be changed to be pulled from the database from the model probably
+    #or maybe just stash this data when the page is loaded
+    my $data->{tag} = "nochange";
+    $data->{received} = "date";
+    $data->{customer} = "select";
+    $data->{asset_type} = "select";
+    $data->{price} = "number";
+    
+    $self->render(json => $data);
+}
+
 1;

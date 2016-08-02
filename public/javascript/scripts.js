@@ -2,11 +2,11 @@
 var globalInput = "";                   //input string will store the input typed in a keyboard up until the user presses enter
 var selectedInput = "none";             //currently selected input on the assentInfo table. e.x. 'asset_type' OR 'customer'
 var selectedTableAsset = "none";        //currently selected asset from the table. Will be set as the tag of the asset selected from the table. ex. 123456A
-
 var currentAsset = {};
 
 const MACRO_LETTERS = "ABYZ";            //Contains all of the recognized macro letter endings 
 const MACRO_LOAD_ASSET_LETTERS = "ABZ";  //Contains macro letters that will load an asset or create a new one if it is not in the db
+var SPECIAL_INPUTS = {};
 
 //variables that will hold HTML for different elements in the 
 var defaultAssetRow = "";
@@ -59,6 +59,8 @@ function initialize() {
     defaultAssetRow = $("#assetTableBody").html();
     
     updateAssetTable(fd);
+    
+    $.get('/specialinputs', function(data){SPECIAL_INPUTS = data});
     
     assetInfoNoChange = "<tr id='row_TITLE'>" + $("#nochange").html() + "</tr>";
     assetInfoText = "<tr id='row_TITLE'>" + $("#text").html() + "</tr>";
@@ -114,31 +116,22 @@ function showAssetInfo(asset) {
     for (var property in asset) {
         if (asset.hasOwnProperty(property)) {
             var html = ""; //the html for a single property yeuah
-            switch(property) {
-                case 'tag' :
+            
+            var type = SPECIAL_INPUTS[property];
+            switch(type) {
+                case 'nochange' :
                     html += assetInfoNoChange;
                     break;
-                case 'customer':
+                case 'select':
                     html += assetInfoSelect;
                     break;
-                case 'received':
+                case 'date':
                     html += assetInfoDate;
                     var date = new Date(asset[property]);
                     html = html.replace(/VALUE/g, date.toISOString().substring(0, date.toISOString().indexOf('T')));
                     break;
-                case 'asset_type' :
-                    html += assetInfoSelect;
-                    break;
-                case 'sold_date' :
-                    html += assetInfoDate;
-                    var date = new Date(asset[property]);
-                    html = html.replace(/VALUE/g, date.toISOString().substring(0, date.toISOString().indexOf('T')));
-                    break;
-                case 'price' :
+                case 'number' :
                     html += assetInfoNumber;
-                    break;
-                case 'sold_via' :
-                    html += assetInfoSelect;
                     break;
                 default :
                     html += assetInfoText;
@@ -181,6 +174,7 @@ function showAssetInfo(asset) {
        globalInput = "";
        selectedInput = "none";
        $("#row_" + $(this).attr('id')).removeClass('selected');
+       console.log("send info to the server");
     });
     
     currentAsset = asset;
@@ -276,3 +270,4 @@ fakeData.manufacturer = "Banana Corps";
 fakeData.product = "Banana Phone";
 fakeData.model = "Yellow Mode 3.1.2";
 fakeData.location = "Ceiling";
+fakeData.price = 100.1;
