@@ -21,14 +21,24 @@ $(document).ready(function() {
     
     $(".signInBadge").keypress(function(e){
         if(e.key == "Enter") {
-            if($(".signInBadge").val() == "123456Y") {
-                $(".backgroundCover").hide();
-                $(".signInContainer").hide();
-                initialize();
-                
-                //instead of setting to the badge here, set it to the username received from the server
-                $("#user").html($(".signInBadge").val());
-            }
+            $.ajax({
+                url : '/mastercontroller/',
+                type : 'POST',
+                dataType : 'json',
+                data : {tag : $(".signInBadge").val()}
+            }).done(function(data){
+                console.log(data)
+                if(data.name != undefined) {
+                    console.log(data.name + " has signed in WOOO");
+                    $("#user").html(data.name);
+                    $(".backgroundCover").hide();
+                    $(".signInContainer").hide();
+                    initialize();
+                }
+                else {
+                    console.log("Wow that badge was not found..?");
+                }
+            });
             $(".signInBadge").val('');
         }
     });
@@ -42,6 +52,7 @@ $(document).ready(function() {
             else {
                 globalInput += e.key;
             }
+            $("#globalInput").html(globalInput);
         }
     });
 });

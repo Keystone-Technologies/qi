@@ -28,6 +28,9 @@ sub startup {
   $r->get('/table')->to('assets#table');
   $r->get('/specialinputs')->to('assets#specialinputs');
   
+  #this could use a better name
+  $r->post('/mastercontroller')->to('assets#mastercontroller');
+  
   $r->post('/asset')->to('assets#update'); #updates or creates an asset
 }
 

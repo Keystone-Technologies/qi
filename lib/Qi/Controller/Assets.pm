@@ -53,4 +53,35 @@ sub specialinputs {
     $self->render(json => $data);
 }
 
+sub mastercontroller {
+    my $self = shift;
+    
+    my $tag = $self->param('tag');
+    
+    my $map;
+    
+    #Checks if the tag has exactly 6 digits followed by a capital Y, if it does, goes in the if statement
+    #  the ( ) in the expression is the selection, so anything found between the () will be extracted and placed into variable $1
+    #  in this case, there will be exactly 6 digits in $1
+    if($tag =~ m/(\d{6})Y/) {
+        $map = eval {$self->pg->db->query('select map from barcode_map where id = ?', $1)->hash}; #move to a model
+    }
+    
+    if($map != undef) {
+        $map = $map->{map};
+    }
+    
+    #the data to be sent back to the client
+    my $data->{response} = "hello";
+    
+    if($map =~ m/QIM/) {
+        #Could simply return the name from the barcode map has, but here it also checks the database to make sure the user has a barcode and is in the database
+        if($map =~ m/_who:(.*)/) {
+            $data->{name} = $self->pg->db->query('select username from users where username = ?', $1)->hash->{username}; #move to a model
+        }
+    }
+    
+    $self->render(json => $data);
+}
+
 1;

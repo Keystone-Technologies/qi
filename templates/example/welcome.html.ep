@@ -8,6 +8,7 @@
 <body>
     <div class="header">
         Welcome <span id="user">USERNAME</span>
+        </br>Input : <span id="globalInput">input</span>
         <div class="buttonsContainer">
             <button onclick="clearAssetInfo();">Clear Form</button>
             <button onclick="hideAssetInfo();">Cancel</button>
