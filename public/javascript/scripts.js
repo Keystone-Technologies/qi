@@ -43,6 +43,14 @@ $(document).ready(function() {
         }
     });
     
+    if(user != "") {
+        console.log("here");
+        $("#user").html(user);
+        $(".backgroundCover").hide();
+        $(".signInContainer").hide();
+        initialize();
+    }
+    
     $("body").keypress(function(e){
         if(selectedInput == "none") {
             if(e.key == "Enter") {

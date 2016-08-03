@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <head>
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script>user = "<%=$self->session->{user};%>"; </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="javascript/scripts.js"></script>
     <title>QUICK ENVINVEENVITORTY</title>
 </head>
 <body>
     <div class="header">
-        Welcome <span id="user">USERNAME</span>
+        Welcome, <span id="user">USERNAME</span>. Click <a href="/signout">here</a> to sign out.
         </br>Input : <span id="globalInput">input</span>
         <div class="buttonsContainer">
             <button onclick="clearAssetInfo();">Clear Form</button>

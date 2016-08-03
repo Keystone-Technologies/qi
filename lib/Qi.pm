@@ -7,6 +7,8 @@ use Qi::Model::Assets;
 # This method will run once at server start
 sub startup {
   my $self = shift;
+  
+  $self->sessions->default_expiration(86400*365*10);
 
   #Config
   my $config = $self->plugin('Config');
@@ -27,6 +29,7 @@ sub startup {
   $r->get('/asset')->to('assets#asset'); #returns information for a single asset
   $r->get('/table')->to('assets#table');
   $r->get('/specialinputs')->to('assets#specialinputs');
+  $r->get('/signout')->to('assets#signout');
   
   #this could use a better name
   $r->post('/mastercontroller')->to('assets#mastercontroller');

@@ -75,13 +75,23 @@ sub mastercontroller {
     my $data->{response} = "hello";
     
     if($map =~ m/QIM/) {
-        #Could simply return the name from the barcode map has, but here it also checks the database to make sure the user has a barcode and is in the database
+        #Could simply return the name from the barcode map, but here it also checks the database to make sure the name that barcode map has is actually in the database
         if($map =~ m/_who:(.*)/) {
             $data->{name} = $self->pg->db->query('select username from users where username = ?', $1)->hash->{username}; #move to a model
+            $self->session->{user} = $data->{name};
         }
     }
     
     $self->render(json => $data);
+}
+
+sub signout {
+    my $self = shift;
+    
+    $self->session(expires=>1);
+    
+    # Render template "example/welcome.html.ep" with message
+    $self->redirect_to('/');
 }
 
 1;
