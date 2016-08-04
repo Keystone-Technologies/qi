@@ -63,7 +63,7 @@ sub mastercontroller {
     my $self = shift;
     
     my $tag = $self->param('tag');
-    my $map;
+    my $map = 0;
     my $data->{response} = "FAIL"; #the data to be sent back to the client
     
     #Checks if the tag has exactly 6 digits followed by a capital Y, if it does, goes in the if statement
@@ -78,6 +78,11 @@ sub mastercontroller {
         $data->{is_command} = 'true';
         # this here query will be removed when ben finishes his model creation
         $data = eval {$self->pg->db->query('select tag, parenttag, customer_id as customer, received, customer_tag, serial_number as serial, asset_type_id as asset_type, manufacturer, product, model, location_id as location from assets where tag like ?', $tag)->hash};
+        if(!(defined $data)) {
+            #then create a new one and let data be the new one
+            $data = eval {$self->pg->db->query("insert into assets (tag, add_stamp) values (?,now());", $tag)->hash};
+            $data = eval {$self->pg->db->query('select tag, parenttag, customer_id as customer, received, customer_tag, serial_number as serial, asset_type_id as asset_type, manufacturer, product, model, location_id as location from assets where tag like ?', $tag)->hash};
+        }
     }
     
     if($map != undef) {

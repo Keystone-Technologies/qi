@@ -2,8 +2,6 @@
 var globalInput = "";                   //input string will store the input typed in a keyboard up until the user presses enter
 var selectedInput = "none";             //currently selected input on the assentInfo table. e.x. 'asset_type' OR 'customer'
 var selectedTableAsset = "none";        //currently selected asset from the table. Will be set as the tag of the asset selected from the table. ex. 123456A
-var currentAsset = {};
-
 var SPECIAL_INPUTS = {};
 
 //variables that will hold HTML for different elements in the 
@@ -63,9 +61,6 @@ $(document).ready(function() {
 });
 
 function initialize() {
-    //instead of this, load the most recent property changes from the server
-    currentAsset = fakeData; //also this function could probably be completely removed and moved to the serve maybe
-    
     defaultAssetRow = $("#assetTableBody").html();
     
     //updateAssetTable(fd);
@@ -96,10 +91,6 @@ function initialize() {
     $("#date").remove();
     $("#number").remove();
     $("#selection").remove();
-    
-    //IMPORTSNANT see change asset info to find the select and INPUT element chagne listener
-    
-    console.log("it is here");
 }
 
 function updateAssetTable(data) {
@@ -108,17 +99,17 @@ function updateAssetTable(data) {
     
     data.forEach(function(item, index) {
         html = defaultAssetRow;
-        html = html.replace(/TAG/g, item.tag);
-        html = html.replace(/PARENT/g, item.parenttag);
-        html = html.replace(/CUSTOMER/g, item.customer);
-        html = html.replace(/RECEIVED/g, item.received);
-        html = html.replace(/CUST_AG/g, item.customer_tag);
-        html = html.replace(/SERIAL/g, item.serial);
-        html = html.replace(/ASSET_TYPE/g, item.asset_type);
-        html = html.replace(/MANUFACTURER/g, item.manufacturer);
-        html = html.replace(/PRODUCT/g, item.product);
-        html = html.replace(/MODEL/g, item.model);
-        html = html.replace(/LOCATION/g, item.location);
+        html = html.replace(/TAG/g, item.tag || "");
+        html = html.replace(/PARENT/g, item.parenttag || "-");
+        html = html.replace(/CUSTOMER/g, item.customer || "");
+        html = html.replace(/RECEIVED/g, item.received || "");
+        html = html.replace(/CUST_AG/g, item.customer_tag || "");
+        html = html.replace(/SERIAL/g, item.serial || "");
+        html = html.replace(/ASSET_TYPE/g, item.asset_type || "");
+        html = html.replace(/MANUFACTURER/g, item.manufacturer || "");
+        html = html.replace(/PRODUCT/g, item.product || "");
+        html = html.replace(/MODEL/g, item.model || "");
+        html = html.replace(/LOCATION/g, item.location || "");
         
         totalHtml += html;
     });
@@ -128,7 +119,6 @@ function updateAssetTable(data) {
 
 function showAssetInfo(asset) {
     $("#noAssetMessage").hide();
-    console.log('here woah');
     var endHtml = "";
     for (var property in asset) {
         if (asset.hasOwnProperty(property)) {
@@ -170,7 +160,8 @@ function showAssetInfo(asset) {
     });
     
     $("input").keypress(function(e){
-        if(e.key == "Enter") {
+        console.log(e.key);
+        if(e.key == "Enter" || e.key == "Tab") {
             if(processInput(globalInput)) {
                 $(this).val($(this).val().replace(globalInput, ""));
             }
@@ -216,23 +207,8 @@ function processInput(input) {
         dataType:'json',
         data:{tag : input}
     }).done(function(data){
-        console.log(data);
         showAssetInfo(data);
     });
     
     return isCommand;
 }
-
-var fakeData = {};
-fakeData.tag = "QQ123Q";
-fakeData.parent_tag = "abc123";
-fakeData.customer = "BillyBob";
-fakeData.received = "04/09/2014";
-fakeData.customer_tag = "112342";
-fakeData.serial = "123456";
-fakeData.asset_type = "Phone";
-fakeData.manufacturer = "Banana Corps";
-fakeData.product = "Banana Phone";
-fakeData.model = "Yellow Mode 3.1.2";
-fakeData.location = "Ceiling";
-fakeData.price = 100.1;
