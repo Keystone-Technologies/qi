@@ -31,10 +31,14 @@ sub update {
     $self->render(json => $data);
 }
 
+#This subroutine could defintely be renamed
 sub table {
     my $self = shift;
     
-    my $data->{response} = "you requested the table";
+    my $data;
+    
+    #this query will be erplaced my a model call
+    $data = $self->pg->db->query('select tag, parenttag, customer_id as customer, received, customer_tag, serial_number as serial, asset_type_id as asset_type, manufacturer, product, model, location_id as location from assets order by change_stamp desc limit 30;')->hashes->to_array;
     
     $self->render(json => $data);
 }

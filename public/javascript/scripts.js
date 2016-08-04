@@ -63,18 +63,25 @@ $(document).ready(function() {
 });
 
 function initialize() {
-    //load the data from the server here josh
-    var fd = [];
-    for(var i = 0; i < 30; i ++) {
-        fd[i] = fakeData;
-    }
-    
     //instead of this, load the most recent property changes from the server
-    currentAsset = getDefaultAssetProperties(); //also this function could probably be completely removed and moved to the serve maybe
+    currentAsset = fakeData; //also this function could probably be completely removed and moved to the serve maybe
     
     defaultAssetRow = $("#assetTableBody").html();
     
-    updateAssetTable(fd);
+    //updateAssetTable(fd);
+    $.ajax({
+        url:'/table',
+        type:'GET',
+        dataType:'json',
+    }).done(function(data){
+        updateAssetTable(data);
+        $(".assetTable tr").click(function(){ 
+            $("#" + selectedTableAsset).removeClass('selected');
+            $(this).addClass('selected');
+            selectedTableAsset = $(this).attr('id');
+            processInput($(this).attr('id'));
+        });
+    });
     
     $.get('/specialinputs', function(data){SPECIAL_INPUTS = data});
     
@@ -92,14 +99,7 @@ function initialize() {
     
     //IMPORTSNANT see change asset info to find the select and INPUT element chagne listener
     
-    $(".assetTable tr").click(function(){ 
-        $("#" + selectedTableAsset).removeClass('selected');
-        $(this).addClass('selected');
-        selectedTableAsset = $(this).attr('id');
-        
-        console.log("Get server info for this tag then pass it in here");
-        showAssetInfo(fakeData);
-    });
+    console.log("it is here");
 }
 
 function updateAssetTable(data) {
@@ -108,8 +108,8 @@ function updateAssetTable(data) {
     
     data.forEach(function(item, index) {
         html = defaultAssetRow;
-        html = html.replace(/TAG/g, item.tag + index);
-        html = html.replace(/PARENT/g, item.parent_tag);
+        html = html.replace(/TAG/g, item.tag);
+        html = html.replace(/PARENT/g, item.parenttag);
         html = html.replace(/CUSTOMER/g, item.customer);
         html = html.replace(/RECEIVED/g, item.received);
         html = html.replace(/CUST_AG/g, item.customer_tag);
