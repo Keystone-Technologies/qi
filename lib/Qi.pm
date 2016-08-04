@@ -29,7 +29,7 @@ sub startup {
   $r->get('/asset')->to('assets#asset'); #returns information for a single asset
   $r->get('/table')->to('assets#table');
   $r->get('/specialinputs')->to('assets#specialinputs');
-  $r->get('/signout')->to('assets#signout');
+  $r->get('/signout')->to('assets#signout'); #signs user out
   
   #this could use a better name
   $r->post('/mastercontroller')->to('assets#mastercontroller');

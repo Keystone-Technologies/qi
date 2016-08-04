@@ -49,16 +49,18 @@ sub specialinputs {
     $data->{customer} = "select";
     $data->{asset_type} = "select";
     $data->{price} = "number";
+    $data->{location} = "select";
     
     $self->render(json => $data);
 }
 
+#this should be renamed
 sub mastercontroller {
     my $self = shift;
     
     my $tag = $self->param('tag');
-    
     my $map;
+    my $data->{response} = "FAIL"; #the data to be sent back to the client
     
     #Checks if the tag has exactly 6 digits followed by a capital Y, if it does, goes in the if statement
     #  the ( ) in the expression is the selection, so anything found between the () will be extracted and placed into variable $1
@@ -67,12 +69,16 @@ sub mastercontroller {
         $map = eval {$self->pg->db->query('select map from barcode_map where id = ?', $1)->hash}; #move to a model
     }
     
+    #not a good idea to have these macro letters defined in this if statement
+    elsif($tag =~ m/(\d{6})(A|B|Z)/) {
+        $data->{is_command} = 'true';
+        # this here query will be removed when ben finishes his model creation
+        $data = eval {$self->pg->db->query('select tag, parenttag, customer_id as customer, received, customer_tag, serial_number as serial, asset_type_id as asset_type, manufacturer, product, model, location_id as location from assets where tag like ?', $tag)->hash};
+    }
+    
     if($map != undef) {
         $map = $map->{map};
     }
-    
-    #the data to be sent back to the client
-    my $data->{response} = "hello";
     
     if($map =~ m/QIM/) {
         #Could simply return the name from the barcode map, but here it also checks the database to make sure the name that barcode map has is actually in the database

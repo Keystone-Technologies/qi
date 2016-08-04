@@ -133,8 +133,28 @@ CREATE VIEW asset_vw AS
     )
 ;
 
+CREATE OR REPLACE FUNCTION customer(integer) 
+RETURNS text AS
+$BODY$
+  declare result text;
+  BEGIN
+    select
+      name into result
+    from
+      customers
+    where
+      customer_id = $1;
+    if result is null then
+      return "id not in customer table";
+    else
+      return result;
+    end if;
+  END; 
+$BODY$ LANGUAGE plpgsql;
+
 -- 1 down
 
+DROP FUNCTION IF EXISTS customer(ingeter);
 drop table if exists asset_types;
 drop table if exists assets;
 drop table if exists barcode_map;

@@ -4,8 +4,6 @@ var selectedInput = "none";             //currently selected input on the assent
 var selectedTableAsset = "none";        //currently selected asset from the table. Will be set as the tag of the asset selected from the table. ex. 123456A
 var currentAsset = {};
 
-const MACRO_LETTERS = "ABYZ";            //Contains all of the recognized macro letter endings 
-const MACRO_LOAD_ASSET_LETTERS = "ABZ";  //Contains macro letters that will load an asset or create a new one if it is not in the db
 var SPECIAL_INPUTS = {};
 
 //variables that will hold HTML for different elements in the 
@@ -27,7 +25,6 @@ $(document).ready(function() {
                 dataType : 'json',
                 data : {tag : $(".signInBadge").val()}
             }).done(function(data){
-                console.log(data)
                 if(data.name != undefined) {
                     console.log(data.name + " has signed in WOOO");
                     $("#user").html(data.name);
@@ -43,8 +40,8 @@ $(document).ready(function() {
         }
     });
     
+    //if the user has a session stored
     if(user != "") {
-        console.log("here");
         $("#user").html(user);
         $(".backgroundCover").hide();
         $(".signInContainer").hide();
@@ -131,6 +128,7 @@ function updateAssetTable(data) {
 
 function showAssetInfo(asset) {
     $("#noAssetMessage").hide();
+    console.log('here woah');
     var endHtml = "";
     for (var property in asset) {
         if (asset.hasOwnProperty(property)) {
@@ -211,70 +209,18 @@ function hideAssetInfo() {
 
 function processInput(input) {
     var isCommand = false;
-    var endChar = input.charAt(input.length - 1);
-    if(input.length == 7) {
-        if(MACRO_LETTERS.indexOf(endChar) != -1) {
-            isCommand = true;
-            if(MACRO_LOAD_ASSET_LETTERS.indexOf(endChar) != -1) {
-                //these things should only be happening when you are 100% certain they want to create a new asset
-                var asset = $.extend(true, {}, currentAsset);
-                 for (var property in asset) {
-                    if (asset.hasOwnProperty(property)) {
-                        asset[property] = "";
-                    }
-                 }
-                
-                asset.tag = input;
-                asset.customer = currentAsset.customer;
-                asset.asset_type = currentAsset.asset_type;
-                asset.received = currentAsset.received;
-                showAssetInfo(asset);
-            }
-            else {
-                console.log("Do a macro thing");
-                console.log("As of right now this macro parse will still run everytime the user signs in, we don't want that. Figure out a way to stop that josh")
-            }
-        }
-        else {
-            console.log(endChar + " is not a recognized macro ending");
-        }
-    }
+    
+    $.ajax({
+        url:'/mastercontroller',
+        type:'post',
+        dataType:'json',
+        data:{tag : input}
+    }).done(function(data){
+        console.log(data);
+        showAssetInfo(data);
+    });
+    
     return isCommand;
-}
-
-//returns the default properties of a new asset
-function getDefaultAssetProperties(assetType, sell) {
-    var asset = {};
-    var today = new Date();
-    //declare these first because they appear in the order they are declared
-    // probably get it from the server each time, OR just once or something
-    // maybe store a global constant object with these?
-    asset.tag = "";
-    asset.customer = "";
-    asset.parent_tag = "";
-    asset.received = today.toISOString().substring(0, today.toISOString().indexOf('T'));
-    asset.customer_tag = "";
-    asset.serial = "";
-    asset.asset_type = "";
-    asset.manufacturer = "";
-    asset.product = "";
-    asset.model = "";
-    asset.location = "";
-    
-    //probably do a get request from the server to get the latest info, but for now this is fine
-    switch(assetType) {
-        case "banana-phone" : 
-            asset.color = "yellow"; //this is where you would give the object its special properties, like ram or something, and do it by a get request probably idk DUDDE
-            break;
-    }
-    
-    if(sell) {
-        asset.sold_date = today.toISOString().substring(0, today.toISOString().indexOf('T'));;
-        asset.sold_via = "";
-        asset.price = 0.00;
-    }
-    
-    return asset;
 }
 
 var fakeData = {};
