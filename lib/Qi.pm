@@ -17,6 +17,14 @@ sub startup {
   $self->helper(pg => sub { state $pg = Mojo::Pg->new(shift->config('pg')) });
   $self->helper(assets => sub { state $assets = Qi::Model::Assets->new(pg => shift->pg) });
   
+  
+  $self->hook(around_action => sub {
+    my ($next, $c, $action, $last) = @_;
+    $c->session->{last_tag} ||= "000000A";
+
+    return $next->();
+  });
+  
   # Migrate to latest version if necessary
   my $path = $self->home->rel_file('migrations/qi.sql');
   $self->pg->migrations->name('qi')->from_file($path)->migrate;

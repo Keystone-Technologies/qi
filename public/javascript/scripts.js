@@ -63,20 +63,7 @@ $(document).ready(function() {
 function initialize() {
     defaultAssetRow = $("#assetTableBody").html();
     
-    //updateAssetTable(fd);
-    $.ajax({
-        url:'/table',
-        type:'GET',
-        dataType:'json',
-    }).done(function(data){
-        updateAssetTable(data);
-        $(".assetTable tr").click(function(){ 
-            $("#" + selectedTableAsset).removeClass('selected');
-            $(this).addClass('selected');
-            selectedTableAsset = $(this).attr('id');
-            processInput($(this).attr('id'));
-        });
-    });
+    updateAssetTable();
     
     $.get('/specialinputs', function(data){SPECIAL_INPUTS = data});
     
@@ -94,6 +81,17 @@ function initialize() {
 }
 
 function updateAssetTable(data) {
+    
+    if(data == null) {
+        $.ajax({
+            url:'/table',
+            type:'GET',
+            dataType:'json',
+        }).done(function(data){
+            updateAssetTable(data);
+        });
+        return;
+    }
     var html = "";
     var totalHtml = "";
     
@@ -115,6 +113,13 @@ function updateAssetTable(data) {
     });
     
     $("#assetTableBody").html(totalHtml);
+    
+    $(".assetTable tr").click(function(){ 
+        $("#" + selectedTableAsset).removeClass('selected');
+        $(this).addClass('selected');
+        selectedTableAsset = $(this).attr('id');
+        processInput($(this).attr('id'));
+    });
 }
 
 function showAssetInfo(asset) {
@@ -131,6 +136,14 @@ function showAssetInfo(asset) {
                     break;
                 case 'select':
                     html += assetInfoSelect;
+                    //gets the array of the top ones
+                    //  ex asset[top_customers]
+                    var top = asset["top_" + property + "s"];
+                    for(var i = 0; i < 4; i ++) {
+                        html = html.replace("NAME_ID", top[i].name + "_" + top[i].id)
+                        html = html.replace("NAME", top[i].name);
+                    }
+                    delete asset["top_" + property + "s"]; //deletes the property so that it is not shown on the asset table!
                     break;
                 case 'date':
                     html += assetInfoDate;
@@ -156,14 +169,27 @@ function showAssetInfo(asset) {
     
     //THESE LISTENERS are here because they only apply to elemtents that exist on the page already
     $("select").on('change', function() {
-        $("#" + $(this).attr('id').substring($(this).attr('id').indexOf('_') + 1)).val($(this).val());
+        //the id of this looks like 'select_customer' so to find property, split it from the underscore
+        var property = $(this).attr('id').substring($(this).attr('id').indexOf('_') + 1);
+        
+        //the value of the select looks like VALUE_ID or Amdocks_13 or something. split it up to get the name and the id of it
+        var value = $(this).val().substring(0, $(this).val().indexOf('_'));
+        var id = $(this).val().substring($(this).val().indexOf('_') + 1);
+        
+        $("#" + property).html(value);
+        updateAsset(property + "_id", id);
     });
     
     $("input").keypress(function(e){
         console.log(e.key);
-        if(e.key == "Enter" || e.key == "Tab") {
+        if(e.key == "Enter") {
             if(processInput(globalInput)) {
                 $(this).val($(this).val().replace(globalInput, ""));
+            }
+            else {
+                //what they entered was not a command, send it to the server
+                console.log("send the info to the server here");
+                updateAsset($(this).attr('id'), $(this).val());
             }
             globalInput = "";
         }
@@ -182,10 +208,8 @@ function showAssetInfo(asset) {
        globalInput = "";
        selectedInput = "none";
        $("#row_" + $(this).attr('id')).removeClass('selected');
-       console.log("send info to the server");
+       updateAsset($(this).attr('id'), $(this).val());
     });
-    
-    currentAsset = asset;
 }
 
 function clearAssetInfo() {
@@ -207,8 +231,32 @@ function processInput(input) {
         dataType:'json',
         data:{tag : input}
     }).done(function(data){
-        showAssetInfo(data);
+        if(!data.not_a_command) {
+            showAssetInfo(data);
+            isCommand = true;
+        }
     });
     
     return isCommand;
+}
+
+function updateAsset(property, value) {
+    console.log("update with prop " + property + " and val " + value);
+    
+    $.ajax({
+       url:'/asset',
+       type:'POST',
+       dataType:'json',
+       data: {property : property, value : value}
+    }).done(function(data){
+        console.log(data);
+        //if null, it didnt work
+        if(data == null) {
+            console.log("FAILURE");
+        }
+        else {
+            console.log("all is good heh");
+            updateAssetTable();
+        }
+    });
 }
