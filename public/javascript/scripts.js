@@ -2,6 +2,7 @@
 var globalInput = "";                   //input string will store the input typed in a keyboard up until the user presses enter
 var selectedInput = "none";             //currently selected input on the assentInfo table. e.x. 'asset_type' OR 'customer'
 var selectedTableAsset = "none";        //currently selected asset from the table. Will be set as the tag of the asset selected from the table. ex. 123456A
+var assetOpen = false;                  //set to true if the user is viewing assent information
 var SPECIAL_INPUTS = {};
 
 //variables that will hold HTML for different elements in the 
@@ -124,6 +125,7 @@ function updateAssetTable(data) {
 
 function showAssetInfo(asset) {
     $("#noAssetMessage").hide();
+    assetOpen = true;
     var endHtml = "";
     for (var property in asset) {
         if (asset.hasOwnProperty(property)) {
@@ -181,16 +183,22 @@ function showAssetInfo(asset) {
     });
     
     $("input").keypress(function(e){
-        console.log(e.key);
         if(e.key == "Enter") {
-            if(processInput(globalInput)) {
-                $(this).val($(this).val().replace(globalInput, ""));
-            }
-            else {
-                //what they entered was not a command, send it to the server
-                console.log("send the info to the server here");
-                updateAsset($(this).attr('id'), $(this).val());
-            }
+            //processInput returns true if the command was an input
+            var id = "#" + $(this).attr('id');
+            console.log("enter was presses");
+            processInput(globalInput, function(isCommand){
+                if(isCommand) {
+                    console.log("in calback, that was a command");
+                    $(id).val($(id).val().replace(globalInput, ""));
+                }
+                else {
+                    console.log("in callback, that was not a command, su updating the asset");
+                    //what they entered was not a command, send it to the server
+                    updateAsset($(id).attr('id'), $(id).val());
+                }
+            });
+            
             globalInput = "";
         }
         else {
@@ -220,20 +228,36 @@ function hideAssetInfo() {
     $("#noAssetMessage").show();
     $("#assetInfo").html('');
     $("#" + selectedTableAsset).removeClass('selected');
+    assetOpen = false;
 }
 
-function processInput(input) {
+function processInput(input, callback) {
     var isCommand = false;
+    console.log("Processing input...");
     
     $.ajax({
         url:'/mastercontroller',
         type:'post',
         dataType:'json',
-        data:{tag : input}
+        data:{tag : input, asset_open : assetOpen}
     }).done(function(data){
-        if(!data.not_a_command) {
-            showAssetInfo(data);
+        if(data.not_a_command) {
+            console.log("that was not a command");
+        }
+        else {
+            console.log("that was a command");
             isCommand = true;
+            if(data.refresh) {
+                processInput(data.tag);
+            }
+            else {
+                showAssetInfo(data);
+            }
+            updateAssetTable();
+        }
+        
+        if(!(callback == undefined)) {
+            callback(isCommand);
         }
     });
     
@@ -249,10 +273,9 @@ function updateAsset(property, value) {
        dataType:'json',
        data: {property : property, value : value}
     }).done(function(data){
-        console.log(data);
         //if null, it didnt work
         if(data == null) {
-            console.log("FAILURE");
+            console.log("Unable to update asset");
         }
         else {
             console.log("all is good heh");
