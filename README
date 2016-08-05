@@ -1,2 +1,2 @@
 sudo /etc/init.d/postgresql restart
-morbo -l http://*:8080 script/qi
+morbo -l http://*:8080 script/Qi

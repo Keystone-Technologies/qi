@@ -2,11 +2,8 @@
 var globalInput = "";                   //input string will store the input typed in a keyboard up until the user presses enter
 var selectedInput = "none";             //currently selected input on the assentInfo table. e.x. 'asset_type' OR 'customer'
 var selectedTableAsset = "none";        //currently selected asset from the table. Will be set as the tag of the asset selected from the table. ex. 123456A
-
-var currentAsset = {};
-
-const MACRO_LETTERS = "ABYZ";            //Contains all of the recognized macro letter endings 
-const MACRO_LOAD_ASSET_LETTERS = "ABZ";  //Contains macro letters that will load an asset or create a new one if it is not in the db
+var assetOpen = false;                  //set to true if the user is viewing assent information
+var SPECIAL_INPUTS = {};
 
 //variables that will hold HTML for different elements in the 
 var defaultAssetRow = "";
@@ -21,17 +18,34 @@ $(document).ready(function() {
     
     $(".signInBadge").keypress(function(e){
         if(e.key == "Enter") {
-            if($(".signInBadge").val() == "123456Y") {
-                $(".backgroundCover").hide();
-                $(".signInContainer").hide();
-                initialize();
-                
-                //instead of setting to the badge here, set it to the username received from the server
-                $("#user").html($(".signInBadge").val());
-            }
+            $.ajax({
+                url : '/mastercontroller/',
+                type : 'POST',
+                dataType : 'json',
+                data : {tag : $(".signInBadge").val()}
+            }).done(function(data){
+                if(data.name != undefined) {
+                    console.log(data.name + " has signed in WOOO");
+                    $("#user").html(data.name);
+                    $(".backgroundCover").hide();
+                    $(".signInContainer").hide();
+                    initialize();
+                }
+                else {
+                    console.log("Wow that badge was not found..?");
+                }
+            });
             $(".signInBadge").val('');
         }
     });
+    
+    //if the user has a session stored
+    if(user != "") {
+        $("#user").html(user);
+        $(".backgroundCover").hide();
+        $(".signInContainer").hide();
+        initialize();
+    }
     
     $("body").keypress(function(e){
         if(selectedInput == "none") {
@@ -42,23 +56,17 @@ $(document).ready(function() {
             else {
                 globalInput += e.key;
             }
+            $("#globalInput").html(globalInput);
         }
     });
 });
 
 function initialize() {
-    //load the data from the server here josh
-    var fd = [];
-    for(var i = 0; i < 30; i ++) {
-        fd[i] = fakeData;
-    }
-    
-    //instead of this, load the most recent property changes from the server
-    currentAsset = getDefaultAssetProperties(); //also this function could probably be completely removed and moved to the serve maybe
-    
     defaultAssetRow = $("#assetTableBody").html();
     
-    updateAssetTable(fd);
+    updateAssetTable();
+    
+    $.get('/specialinputs', function(data){SPECIAL_INPUTS = data});
     
     assetInfoNoChange = "<tr id='row_TITLE'>" + $("#nochange").html() + "</tr>";
     assetInfoText = "<tr id='row_TITLE'>" + $("#text").html() + "</tr>";
@@ -71,74 +79,81 @@ function initialize() {
     $("#date").remove();
     $("#number").remove();
     $("#selection").remove();
-    
-    //IMPORTSNANT see change asset info to find the select and INPUT element chagne listener
-    
-    $(".assetTable tr").click(function(){ 
-        $("#" + selectedTableAsset).removeClass('selected');
-        $(this).addClass('selected');
-        selectedTableAsset = $(this).attr('id');
-        
-        console.log("Get server info for this tag then pass it in here");
-        showAssetInfo(fakeData);
-    });
 }
 
 function updateAssetTable(data) {
+    
+    if(data == null) {
+        $.ajax({
+            url:'/table',
+            type:'GET',
+            dataType:'json',
+        }).done(function(data){
+            updateAssetTable(data);
+        });
+        return;
+    }
     var html = "";
     var totalHtml = "";
     
     data.forEach(function(item, index) {
         html = defaultAssetRow;
-        html = html.replace(/TAG/g, item.tag + index);
-        html = html.replace(/PARENT/g, item.parent_tag);
-        html = html.replace(/CUSTOMER/g, item.customer);
-        html = html.replace(/RECEIVED/g, item.received);
-        html = html.replace(/CUST_AG/g, item.customer_tag);
-        html = html.replace(/SERIAL/g, item.serial);
-        html = html.replace(/ASSET_TYPE/g, item.asset_type);
-        html = html.replace(/MANUFACTURER/g, item.manufacturer);
-        html = html.replace(/PRODUCT/g, item.product);
-        html = html.replace(/MODEL/g, item.model);
-        html = html.replace(/LOCATION/g, item.location);
+        html = html.replace(/TAG/g, item.tag || "");
+        html = html.replace(/PARENT/g, item.parenttag || "-");
+        html = html.replace(/CUSTOMER/g, item.customer || "");
+        html = html.replace(/RECEIVED/g, item.received || "");
+        html = html.replace(/CUST_AG/g, item.customer_tag || "");
+        html = html.replace(/SERIAL/g, item.serial || "");
+        html = html.replace(/ASSET_TYPE/g, item.asset_type || "");
+        html = html.replace(/MANUFACTURER/g, item.manufacturer || "");
+        html = html.replace(/PRODUCT/g, item.product || "");
+        html = html.replace(/MODEL/g, item.model || "");
+        html = html.replace(/LOCATION/g, item.location || "");
         
         totalHtml += html;
     });
     
     $("#assetTableBody").html(totalHtml);
+    
+    $(".assetTable tr").click(function(){ 
+        $("#" + selectedTableAsset).removeClass('selected');
+        $(this).addClass('selected');
+        selectedTableAsset = $(this).attr('id');
+        processInput($(this).attr('id'));
+    });
 }
 
 function showAssetInfo(asset) {
     $("#noAssetMessage").hide();
+    assetOpen = true;
     var endHtml = "";
     for (var property in asset) {
         if (asset.hasOwnProperty(property)) {
             var html = ""; //the html for a single property yeuah
-            switch(property) {
-                case 'tag' :
+            
+            var type = SPECIAL_INPUTS[property];
+            switch(type) {
+                case 'nochange' :
                     html += assetInfoNoChange;
                     break;
-                case 'customer':
+                case 'select':
                     html += assetInfoSelect;
+                    //gets the array of the top ones
+                    //  ex asset[top_customers]
+                    var top = asset["top_" + property + "s"];
+                    for(var i = 0; i < 4; i ++) {
+                        html = html.replace("NAME_ID", top[i].name + "_" + top[i].id)
+                        html = html.replace("NAME", top[i].name);
+                    }
+                    delete asset["top_" + property + "s"]; //deletes the property so that it is not shown on the asset table!
                     break;
-                case 'received':
+                case 'date':
                     html += assetInfoDate;
                     var date = new Date(asset[property]);
                     html = html.replace(/VALUE/g, date.toISOString().substring(0, date.toISOString().indexOf('T')));
                     break;
-                case 'asset_type' :
-                    html += assetInfoSelect;
-                    break;
-                case 'sold_date' :
-                    html += assetInfoDate;
-                    var date = new Date(asset[property]);
-                    html = html.replace(/VALUE/g, date.toISOString().substring(0, date.toISOString().indexOf('T')));
-                    break;
-                case 'price' :
+                case 'number' :
                     html += assetInfoNumber;
-                    break;
-                case 'sold_via' :
-                    html += assetInfoSelect;
                     break;
                 default :
                     html += assetInfoText;
@@ -156,14 +171,34 @@ function showAssetInfo(asset) {
     
     //THESE LISTENERS are here because they only apply to elemtents that exist on the page already
     $("select").on('change', function() {
-        $("#" + $(this).attr('id').substring($(this).attr('id').indexOf('_') + 1)).val($(this).val());
+        //the id of this looks like 'select_customer' so to find property, split it from the underscore
+        var property = $(this).attr('id').substring($(this).attr('id').indexOf('_') + 1);
+        
+        //the value of the select looks like VALUE_ID or Amdocks_13 or something. split it up to get the name and the id of it
+        var value = $(this).val().substring(0, $(this).val().indexOf('_'));
+        var id = $(this).val().substring($(this).val().indexOf('_') + 1);
+        
+        $("#" + property).html(value);
+        updateAsset(property + "_id", id);
     });
     
     $("input").keypress(function(e){
         if(e.key == "Enter") {
-            if(processInput(globalInput)) {
-                $(this).val($(this).val().replace(globalInput, ""));
-            }
+            //processInput returns true if the command was an input
+            var id = "#" + $(this).attr('id');
+            console.log("enter was presses");
+            processInput(globalInput, function(isCommand){
+                if(isCommand) {
+                    console.log("in calback, that was a command");
+                    $(id).val($(id).val().replace(globalInput, ""));
+                }
+                else {
+                    console.log("in callback, that was not a command, su updating the asset");
+                    //what they entered was not a command, send it to the server
+                    updateAsset($(id).attr('id'), $(id).val());
+                }
+            });
+            
             globalInput = "";
         }
         else {
@@ -181,9 +216,8 @@ function showAssetInfo(asset) {
        globalInput = "";
        selectedInput = "none";
        $("#row_" + $(this).attr('id')).removeClass('selected');
+       updateAsset($(this).attr('id'), $(this).val());
     });
-    
-    currentAsset = asset;
 }
 
 function clearAssetInfo() {
@@ -194,85 +228,58 @@ function hideAssetInfo() {
     $("#noAssetMessage").show();
     $("#assetInfo").html('');
     $("#" + selectedTableAsset).removeClass('selected');
+    assetOpen = false;
 }
 
-function processInput(input) {
+function processInput(input, callback) {
     var isCommand = false;
-    var endChar = input.charAt(input.length - 1);
-    if(input.length == 7) {
-        if(MACRO_LETTERS.indexOf(endChar) != -1) {
-            isCommand = true;
-            if(MACRO_LOAD_ASSET_LETTERS.indexOf(endChar) != -1) {
-                //these things should only be happening when you are 100% certain they want to create a new asset
-                var asset = $.extend(true, {}, currentAsset);
-                 for (var property in asset) {
-                    if (asset.hasOwnProperty(property)) {
-                        asset[property] = "";
-                    }
-                 }
-                
-                asset.tag = input;
-                asset.customer = currentAsset.customer;
-                asset.asset_type = currentAsset.asset_type;
-                asset.received = currentAsset.received;
-                showAssetInfo(asset);
-            }
-            else {
-                console.log("Do a macro thing");
-                console.log("As of right now this macro parse will still run everytime the user signs in, we don't want that. Figure out a way to stop that josh")
-            }
+    console.log("Processing input...");
+    
+    $.ajax({
+        url:'/mastercontroller',
+        type:'post',
+        dataType:'json',
+        data:{tag : input, asset_open : assetOpen}
+    }).done(function(data){
+        if(data.not_a_command) {
+            console.log("that was not a command");
         }
         else {
-            console.log(endChar + " is not a recognized macro ending");
+            console.log("that was a command");
+            isCommand = true;
+            if(data.refresh) {
+                processInput(data.tag);
+            }
+            else {
+                showAssetInfo(data);
+            }
+            updateAssetTable();
         }
-    }
+        
+        if(!(callback == undefined)) {
+            callback(isCommand);
+        }
+    });
+    
     return isCommand;
 }
 
-//returns the default properties of a new asset
-function getDefaultAssetProperties(assetType, sell) {
-    var asset = {};
-    var today = new Date();
-    //declare these first because they appear in the order they are declared
-    // probably get it from the server each time, OR just once or something
-    // maybe store a global constant object with these?
-    asset.tag = "";
-    asset.customer = "";
-    asset.parent_tag = "";
-    asset.received = today.toISOString().substring(0, today.toISOString().indexOf('T'));
-    asset.customer_tag = "";
-    asset.serial = "";
-    asset.asset_type = "";
-    asset.manufacturer = "";
-    asset.product = "";
-    asset.model = "";
-    asset.location = "";
+function updateAsset(property, value) {
+    console.log("update with prop " + property + " and val " + value);
     
-    //probably do a get request from the server to get the latest info, but for now this is fine
-    switch(assetType) {
-        case "banana-phone" : 
-            asset.color = "yellow"; //this is where you would give the object its special properties, like ram or something, and do it by a get request probably idk DUDDE
-            break;
-    }
-    
-    if(sell) {
-        asset.sold_date = today.toISOString().substring(0, today.toISOString().indexOf('T'));;
-        asset.sold_via = "";
-        asset.price = 0.00;
-    }
-    
-    return asset;
+    $.ajax({
+       url:'/asset',
+       type:'POST',
+       dataType:'json',
+       data: {property : property, value : value}
+    }).done(function(data){
+        //if null, it didnt work
+        if(data == null) {
+            console.log("Unable to update asset");
+        }
+        else {
+            console.log("all is good heh");
+            updateAssetTable();
+        }
+    });
 }
-
-var fakeData = {};
-fakeData.tag = "QQ123Q";
-fakeData.parent_tag = "abc123";
-fakeData.customer = "BillyBob";
-fakeData.received = "04/09/2014";
-fakeData.customer_tag = "112342";
-fakeData.serial = "123456";
-fakeData.asset_type = "Phone";
-fakeData.manufacturer = "Banana Corps";
-fakeData.product = "Banana Phone";
-fakeData.model = "Yellow Mode 3.1.2";
-fakeData.location = "Ceiling";

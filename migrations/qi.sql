@@ -51,7 +51,7 @@ CREATE TABLE if not exists barcode_map (
 );
 
 CREATE TABLE if not exists buyers (
-  buyer_id serial NOT NULL DEFAULT '0',
+  buyer_id serial NOT NULL,
   name varchar(255) DEFAULT NULL,
   PRIMARY KEY ("buyer_id")
 );
@@ -94,7 +94,7 @@ CREATE TABLE if not exists sessions (
 );
 
 CREATE TABLE if not exists sold_via (
-  sold_via_id serial NOT NULL DEFAULT '0',
+  sold_via_id serial NOT NULL,
   name varchar(255) DEFAULT NULL,
   PRIMARY KEY ("sold_via_id")
 );
@@ -113,7 +113,7 @@ CREATE TABLE if not exists users (
   PRIMARY KEY ("user_id")
 );
 
-DROP VIEW asset_vw;
+DROP VIEW IF EXISTS asset_vw;
 
 CREATE VIEW asset_vw AS 
   select 
@@ -133,8 +133,28 @@ CREATE VIEW asset_vw AS
     )
 ;
 
+CREATE OR REPLACE FUNCTION customer(integer) 
+RETURNS text AS
+$BODY$
+  declare result text;
+  BEGIN
+    select
+      name into result
+    from
+      customers
+    where
+      customer_id = $1;
+    if result is null then
+      return "id not in customer table";
+    else
+      return result;
+    end if;
+  END; 
+$BODY$ LANGUAGE plpgsql;
+
 -- 1 down
 
+DROP FUNCTION IF EXISTS customer(ingeter);
 drop table if exists asset_types;
 drop table if exists assets;
 drop table if exists barcode_map;
