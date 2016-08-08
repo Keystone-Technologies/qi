@@ -1,6 +1,9 @@
 package Qi;
+use warnings;
 use Mojo::Base 'Mojolicious';
 use Mojo::Pg;
+use Qi::Model;
+use Data::Dumper qw(Dumper);
 
 # This method will run once at server start
 sub startup {
@@ -10,8 +13,8 @@ sub startup {
   my $config = $self->plugin('Config');
 
   #Model
-   $self->helper(pg => sub { state $pg = Mojo::Pg->new(shift->config('pg')) });
-
+  $self->helper(pg => sub { state $pg = Mojo::Pg->new(shift->config('pg')) });
+  $self->helper(assets => sub { state $assets = Qi::Model::Base->new(pg => shift->pg) });
   # Documentation browser under "/perldoc"
   $self->plugin('PODRenderer');
 
@@ -23,7 +26,7 @@ sub startup {
   
   my $api = $r->under('/api');
   
-  $api->delete('/assets');
+  $r->delete('/assets/:asset_tag')->to('assets#remove')->name('remove_asset');
 
   # Migrate to latest version if necessary
   my $path = $self->home->rel_file('migrations/qi.sql');
