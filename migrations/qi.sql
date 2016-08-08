@@ -40,7 +40,7 @@ CREATE TABLE if not exists assets (
   revenue_percentage varchar(10) DEFAULT NULL,
   comments varchar(512) DEFAULT NULL,
   change_stamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  add_stamp timestamp NOT NULL
+  add_stamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE if not exists barcode_map (
