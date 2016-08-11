@@ -2,38 +2,34 @@ package Qi::Model::Base;
 use strict;
 use warnings;
 use Mojo::Base 'Mojolicious';
-has 'pg';
+use SQL::Abstract;
 
 #### self Methods ####
+has 'sql'; # $self->sql  for SQL::Abstract
+has 'pg'; # $self->pg   for Mojo::Pg
 
 sub select {
-    my $self = shift;
- 
-    $self->pg->db->select($self->table_name, '*', @_)
+    my ($self, $response, $table) = @_;
+    my($stmt, @bind) = $self->sql->select($table , '*');
+    $self->pg->db->query($stmt, @bind);
 }
 
 sub insert {
-    my $self = shift;
-    my $db = $self->pg->db;
-    $db->insert($self->table_name, @_)   or die $db->error();
-    $db->last_insert_id('','','','')  or die $db->error();
+    my ($self, $response, $table) = @_;
+    my($stmt, @bind) = $self->sql->insert($table, $response);
+    $self->pg->db->query($stmt, @bind);
 }
 
 sub update {
-    my $self = shift;
-    my $db = $self->pg->db;
-    $db->update($self->table_name, @_) or die $db->error();
+    my ($self, $response, $table) = @_;
+    my($stmt, @bind) = $self->sql->update($table, $response->{data}, $response->{where});
+    $self->pg->db->query($stmt, @bind);
 }
 
 sub delete {
-    my ($self, $asset_tag) = @_;
-    warn Data::Dumper::Dumper($asset_tag->{asset_tag});
-    my $db = $self->pg->db;
-    my $results = eval {
-        my $sql = 'delete from assets where tag = ?';
-        $db->query($sql, $asset_tag->{asset_tag})
-    }
-    
+    my ($self, $response , $table) = @_;
+    my($stmt, @bind) = $self->sql->delete($table, $response);
+    $self->pg->db->query($stmt, @bind);
 }
 
 1;
