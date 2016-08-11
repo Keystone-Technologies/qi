@@ -6,16 +6,21 @@ use Test::Mojo;
 my $t = Test::Mojo->new('Qi');
 $t->get_ok('/')->status_is(200);
 
-$t = $t->post_ok('/asset' => {Accept =>'application/json'} => form => {'tag' => '000000A' , 'product' => 'PC'})
-    ->status_is(200)
-    ->json_has('/tag')
-    ->json_has('/product');
+$t = $t->post_ok('/api/assets' => {Accept =>'application/json' , dataType => 'json'} => json => {tag => '000000A' , add_stamp => '2016-08-10 16:21:21'})
+    ->status_is(200);
 
-my $tag = $t->tx->res->json('/tag');
+$t = $t->put_ok('/api/assets' => {Accept =>'application/json' , dataType => 'json'} => json => { data => { tag => '000000B'} , where => {tag => '000000A'}})
+    ->status_is(200);
 
-$t->delete_ok('/asset' . $tag => {Accept => 'application/json'})->status_is(200)
-    ->status_is(200)
-    ->json_has('/tag')
-    ->json_has('/product');
+$t = $t->get_ok('/api/assets' => {Accept =>'application/json'})->status_is(200);
+
+$t->delete_ok('/api/assets' => {Accept => 'application/json' , dataType => 'json'} => json => {tag => '000000B'})
+    ->status_is(200);
+    
+
+
+
+    
+
 
 done_testing();
