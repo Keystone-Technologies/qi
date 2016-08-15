@@ -1,6 +1,4 @@
 package Qi::Model::Base;
-use strict;
-use warnings;
 use Mojo::Base 'Mojolicious';
 use SQL::Abstract;
 
