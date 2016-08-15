@@ -28,10 +28,10 @@ sub startup {
   $r->get('/')->to('example#welcome');
   
   my $api = $r->under('/api');
-  $api->get('/assets')->to('assets#get')->name('get');       # get assets
-  $api->post('/assets')->to('assets#insert')->name('test');     # insert asset
-  $api->put('/assets')->to('assets#update')->name('update');     # update asset
-  $api->delete('/assets')->to('assets#remove')->name('remove'); # remove asset
+  $api->get('/assets')->to('assets#get')->name('get_assets');       # get assets
+  $api->post('/assets')->to('assets#insert')->name('post_asset');     # insert asset
+  $api->put('/assets')->to('assets#update')->name('update_asset');     # update asset
+  $api->delete('/assets')->to('assets#remove')->name('remove_asset'); # remove asset
 
 
 
