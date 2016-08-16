@@ -4,22 +4,21 @@ use Qi::Model::Assets;
 
 sub get {
   my $self = shift;
-  my $json = $self->req->json;
+  my $json = $self->req->json; #this is optional. Not specifying an asset returns all assets
   $self->render(
     json => {
-      table => 'assets',
-      (($json) ? 'asset' : 'assets') => $self->assets->select($json)
+      table => 'assets', #repond with the table
+      (($json) ? 'asset' : 'assets') => $self->assets->select($json) #respond with a specified asset or all assets
     }
   );
 }
 
 sub insert {
   my $self = shift;
-  warn $self->req->json;
   $self->render(
     json => {
       table => 'assets',
-      tag => $self->assets->insert($self->req->json)
+      tag => $self->assets->insert($self->req->json)  #respond with the tag that was inserted
     }
   );
 }
@@ -30,7 +29,7 @@ sub update {
   $self->render(
     json => {
       table => 'assets',
-      status => $self->assets->update($json)
+      status => $self->assets->update($json) #respond with 'Success' if successful
     }
   );
 }
@@ -41,7 +40,7 @@ sub remove {
   $self->render(
     json => {
       table => 'assets',
-      status => $self->assets->delete($json)
+      status => $self->assets->delete($json) #respond with 'Success' if successful
     }
   );
 }
