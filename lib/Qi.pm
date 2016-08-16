@@ -15,8 +15,8 @@ sub startup {
 
   #Model
   $self->helper(pg => sub { state $pg = Mojo::Pg->new(shift->config('pg')) });
-  $self->helper(sql => sub{ state $sql = SQL::Abstract->new});
-  $self->helper(base => sub { state $base = Qi::Model::Base->new(pg => shift->pg , sql => $self->sql) });
+  #$self->helper(sql => sub{ state $sql = SQL::Abstract->new});
+  $self->helper(assets => sub { state $assets = Qi::Model::Assets->new(pg => shift->pg) });
 
   # Documentation browser under "/perldoc"
   $self->plugin('PODRenderer');
