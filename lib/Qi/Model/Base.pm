@@ -1,33 +1,45 @@
 package Qi::Model::Base;
-use Mojo::Base 'Mojolicious';
+use Mojo::Base -base;
 use SQL::Abstract;
+use Mojo::Collection;
+
+has sql => sub { state $sql = SQL::Abstract->new };
 
 #### self Methods ####
-has 'sql'; # $self->sql  for SQL::Abstract
+#has 'sql'; # $self->sql  for SQL::Abstract
 has 'pg'; # $self->pg   for Mojo::Pg
+has 'table' => sub {die "Forgot to define table"};
+
 
 sub select {
-    my ($self, $response, $table) = @_;
-    my($stmt, @bind) = $self->sql->select($table , '*');
-    $self->pg->db->query($stmt, @bind);
+    my ($self, $request) = @_;
+    my($stmt, @bind) = $self->sql->select($self->table , '*', $request);
+    if($request) {
+        $self->pg->db->query($stmt, @bind)->hash;
+    }
+    else {
+        $self->pg->db->query($stmt, @bind)->hashes;
+    }
 }
 
 sub insert {
-    my ($self, $response, $table) = @_;
-    my($stmt, @bind) = $self->sql->insert($table, $response);
-    $self->pg->db->query($stmt, @bind);
+    my ($self, $request) = @_;
+    my($stmt, @bind) = $self->sql->insert($self->table, $request, {returning => 'tag'});
+    $self->pg->db->query($stmt, @bind)->hash->{tag};
 }
 
 sub update {
-    my ($self, $response, $table) = @_;
-    my($stmt, @bind) = $self->sql->update($table, $response->{data}, $response->{where});
+    my ($self, $request) = @_;
+    my($stmt, @bind) = $self->sql->update($self->table, $request->{data}, $request->{where});
     $self->pg->db->query($stmt, @bind);
+    return 'Success!';
 }
 
 sub delete {
-    my ($self, $response , $table) = @_;
-    my($stmt, @bind) = $self->sql->delete($table, $response);
+    my ($self, $request) = @_;
+    my($stmt, @bind) = $self->sql->delete($self->table, $request);
     $self->pg->db->query($stmt, @bind);
+    return 'Success';
 }
 
 1;
