@@ -14,7 +14,7 @@ $t = $t->post_ok('/api/assets' => {Accept =>'application/json' , dataType => 'js
 $t = $t->put_ok('/api/assets' => {Accept =>'application/json' , dataType => 'json'} => json => { data => { tag => '000000B'} , where => {tag => '000000A'}})
     ->status_is(200)
     ->json_has({table => 'assets'})
-    ->json_has({status => 'Success'});
+    ->json_has({tag => '000000B'});
 
 $t = $t->get_ok('/api/assets' => {Accept =>'application/json'})
     ->status_is(200)
@@ -30,7 +30,7 @@ $t->get_ok('/api/assets' => {Accept => 'application/json' , dataType => 'json'} 
 $t->delete_ok('/api/assets' => {Accept => 'application/json' , dataType => 'json'} => json => {tag => '000000B'})
     ->status_is(200)
     ->json_has({table => 'assets'})
-    ->json_has({status => 'Success'});
+    ->json_has({tag => '000000B'});
     
 
 
