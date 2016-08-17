@@ -18,7 +18,7 @@ sub insert {
   $self->render(
     json => {
       table => 'assets',
-      tag => $self->assets->insert($self->req->json)  #respond with the tag that was inserted
+      tag => $self->assets->insert($self->req->json)->{tag}  #respond with the tag that was inserted
     }
   );
 }
@@ -29,7 +29,7 @@ sub update {
   $self->render(
     json => {
       table => 'assets',
-      status => $self->assets->update($json) #respond with 'Success' if successful
+      tag => $self->assets->update($json)->{tag} #respond with tag of updated entry (if tag is updated, the new tag will be returned)
     }
   );
 }
@@ -40,7 +40,7 @@ sub remove {
   $self->render(
     json => {
       table => 'assets',
-      status => $self->assets->delete($json) #respond with 'Success' if successful
+      tag => $self->assets->delete($json)->{tag} #respond with tag that was deleted
     }
   );
 }
