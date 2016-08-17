@@ -1,7 +1,8 @@
 package Qi::Model::Assets;
-use Mojo::Base 'Qi::Model::Base';
+use Mojo::Base 'Qi::Model::Crud';
 
 has table => 'assets';
+has returning => 'tag';
 
 #sub update_timestamp {
 #    my ($self, $tag) = @_;
