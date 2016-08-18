@@ -20,8 +20,7 @@ $t = $t->get_ok('/api/assets' => {Accept =>'application/json'})
     ->status_is(200)
     ->json_has({table => 'assets'})
     ->json_has({'assets'});
-    
-    
+
 $t->get_ok('/api/assets' => {Accept => 'application/json' , dataType => 'json'} => json => {tag => '000000B'})
     ->status_is(200)
     ->json_has({table => 'assets'})
@@ -31,11 +30,19 @@ $t->delete_ok('/api/assets' => {Accept => 'application/json' , dataType => 'json
     ->status_is(200)
     ->json_has({table => 'assets'})
     ->json_has({tag => '000000B'});
-    
+
+$t = $t->get_ok('/api/locations' => {Accept =>'application/json'})
+    ->status_is(200)
+    ->json_has({table => 'locations'})
+    ->json_has({'locations'});
+
+$t = $t->get_ok('/api/locations' => {Accept =>'application/json'})
+    ->status_is(200)
+    ->json_has({table => 'locations'})
+    ->json_has({'locations'});
 
 
 
-    
 
 
 done_testing();
