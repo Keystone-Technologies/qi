@@ -40,7 +40,7 @@ CREATE TABLE if not exists assets (
   revenue_percentage varchar(10) DEFAULT NULL,
   comments varchar(512) DEFAULT NULL,
   change_stamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  add_stamp timestamp NOT NULL
+  add_stamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE if not exists barcode_map (
@@ -51,7 +51,7 @@ CREATE TABLE if not exists barcode_map (
 );
 
 CREATE TABLE if not exists buyers (
-  buyer_id serial NOT NULL DEFAULT '0',
+  buyer_id serial NOT NULL,
   name varchar(255) DEFAULT NULL,
   PRIMARY KEY ("buyer_id")
 );
@@ -94,7 +94,7 @@ CREATE TABLE if not exists sessions (
 );
 
 CREATE TABLE if not exists sold_via (
-  sold_via_id serial NOT NULL DEFAULT '0',
+  sold_via_id serial NOT NULL,
   name varchar(255) DEFAULT NULL,
   PRIMARY KEY ("sold_via_id")
 );
@@ -113,7 +113,7 @@ CREATE TABLE if not exists users (
   PRIMARY KEY ("user_id")
 );
 
-DROP VIEW asset_vw;
+DROP VIEW if exists asset_vw;
 
 CREATE VIEW asset_vw AS 
   select 
@@ -135,7 +135,7 @@ CREATE VIEW asset_vw AS
 
 -- 1 down
 
-drop table if exists asset_types;
+drop table if exists asset_types CASCADE;
 drop table if exists assets;
 drop table if exists barcode_map;
 drop table if exists buyers;
